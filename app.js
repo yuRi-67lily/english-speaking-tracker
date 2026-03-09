@@ -95,8 +95,15 @@ function initRecognition() {
   rec.onend = () => {
     // Auto-restart if still recording (recognition can stop unexpectedly on mobile)
     if (isRecording) {
-      // 再起動前に今のcurrentTranscriptを蓄積に保存
-      accumulatedTranscript = currentTranscript;
+      // interimが確定しないまま切れた場合、interimも蓄積に回す
+      if (interimTranscript.trim()) {
+        accumulatedTranscript = (currentTranscript + ' ' + interimTranscript).trim();
+      } else {
+        accumulatedTranscript = currentTranscript;
+      }
+      currentTranscript = accumulatedTranscript;
+      interimTranscript = '';
+      updateLiveDisplay();
       try {
         rec.start();
       } catch (e) {
@@ -189,6 +196,12 @@ function stopRecording(shouldSave = true) {
   btn.classList.remove('recording');
   btn.querySelector('.btn-record-icon').textContent = '🎤';
   btn.querySelector('.btn-record-label').textContent = 'タップして開始';
+
+  // 停止時、interimに残ってるテキストもcurrentTranscriptに合流させる
+  if (interimTranscript.trim()) {
+    currentTranscript = (currentTranscript + ' ' + interimTranscript).trim();
+    interimTranscript = '';
+  }
 
   if (shouldSave && currentTranscript.trim()) {
     const elapsed = Math.floor((Date.now() - startTime) / 1000);
