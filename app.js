@@ -128,8 +128,41 @@ function countWords(text) {
   return text.trim().split(/\s+/).length;
 }
 
+// 繰り返しフレーズを除去する（端末の音声認識エンジンが重複出力するケース対策）
+function deduplicateTranscript(text) {
+  if (!text.trim()) return text;
+  const words = text.trim().split(/\s+/);
+  if (words.length < 2) return text;
+
+  // 連続する同一フレーズを検出（1〜8語のパターンをチェック）
+  for (let patLen = 1; patLen <= Math.min(8, Math.floor(words.length / 2)); patLen++) {
+    const pattern = words.slice(0, patLen).join(' ').toLowerCase();
+    let pos = 0;
+    let count = 0;
+
+    while (pos + patLen <= words.length) {
+      const chunk = words.slice(pos, pos + patLen).join(' ').toLowerCase();
+      if (chunk === pattern) {
+        count++;
+        pos += patLen;
+      } else {
+        break;
+      }
+    }
+
+    // 同じフレーズが2回以上連続していたら、1回だけ残して残りを結合
+    if (count >= 2) {
+      const deduped = words.slice(0, patLen).join(' ') + ' ' + words.slice(count * patLen).join(' ');
+      debugLog(`dedup: removed ${count - 1} repeats of "${pattern}"`);
+      return deduplicateTranscript(deduped.trim()); // 再帰的にチェック
+    }
+  }
+
+  return text.trim();
+}
+
 function updateLiveDisplay() {
-  const fullText = (currentTranscript + ' ' + interimTranscript).trim();
+  const fullText = deduplicateTranscript((currentTranscript + ' ' + interimTranscript).trim());
   const count = countWords(fullText);
   document.getElementById('live-word-count').textContent = count;
 
@@ -212,6 +245,9 @@ function stopRecording(shouldSave = true) {
     currentTranscript = (currentTranscript + ' ' + interimTranscript).trim();
     interimTranscript = '';
   }
+
+  // 重複フレーズを除去
+  currentTranscript = deduplicateTranscript(currentTranscript);
 
   debugLog(`stopRecording: save=${shouldSave} transcript="${currentTranscript}"`);
 
