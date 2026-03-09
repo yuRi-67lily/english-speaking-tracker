@@ -70,33 +70,34 @@ function initRecognition() {
 
   const rec = new SpeechRecognition();
   rec.lang = 'en-US';
-  rec.continuous = true;
+  rec.continuous = false;  // 1発話ずつ処理（重複防止）
   rec.interimResults = true;
   rec.maxAlternatives = 1;
 
   rec.onresult = (event) => {
-    let sessionFinal = '';
-    let interim = '';
-    for (let i = 0; i < event.results.length; i++) {
-      const result = event.results[i];
-      if (result.isFinal) {
-        sessionFinal += result[0].transcript + ' ';
-      } else {
-        interim += result[0].transcript;
-      }
+    const result = event.results[0];
+    const text = result[0].transcript;
+    const isFinal = result.isFinal;
+
+    debugLog(`onresult: "${text}" final=${isFinal}`);
+
+    if (isFinal) {
+      // 確定したテキストを蓄積に追加
+      accumulatedTranscript = (accumulatedTranscript + ' ' + text).trim();
+      currentTranscript = accumulatedTranscript;
+      interimTranscript = '';
+    } else {
+      interimTranscript = text;
     }
-    debugLog(`onresult: final="${sessionFinal.trim()}" interim="${interim.trim()}" results=${event.results.length}`);
-    // finalのみ蓄積に加算。interimは表示用のみ（蓄積しない）
-    if (sessionFinal.trim()) {
-      currentTranscript = (accumulatedTranscript + ' ' + sessionFinal).trim();
-    }
-    interimTranscript = interim;
     updateLiveDisplay();
   };
 
   rec.onerror = (event) => {
     debugLog(`onerror: ${event.error}`);
-    if (event.error === 'no-speech') return;
+    if (event.error === 'no-speech') {
+      // 無音でもrecordingを続ける（onendで再起動される）
+      return;
+    }
     if (event.error === 'aborted') return;
     if (event.error === 'not-allowed') {
       showToast('マイクの許可が必要です');
@@ -105,18 +106,23 @@ function initRecognition() {
   };
 
   rec.onend = () => {
-    debugLog(`onend: isRecording=${isRecording} current="${currentTranscript}" interim="${interimTranscript}"`);
+    debugLog(`onend: isRecording=${isRecording} accumulated="${accumulatedTranscript}"`);
     if (isRecording) {
-      // finalだけを蓄積に保存（interimは捨てる＝次の再起動でまた拾われるから）
-      accumulatedTranscript = currentTranscript;
-      interimTranscript = '';
-      updateLiveDisplay();
-      try {
-        rec.start();
-        debugLog('restarted recognition');
-      } catch (e) {
-        debugLog(`restart failed: ${e.message}`);
-      }
+      // 少し待ってから再起動（音声バッファが残って重複するのを防ぐ）
+      setTimeout(() => {
+        if (!isRecording) return;
+        try {
+          rec.start();
+          debugLog('restarted recognition');
+        } catch (e) {
+          debugLog(`restart failed: ${e.message}`);
+          // 新しいインスタンスで再試行
+          recognition = initRecognition();
+          if (recognition) {
+            try { recognition.start(); } catch {}
+          }
+        }
+      }, 300);
     }
   };
 
