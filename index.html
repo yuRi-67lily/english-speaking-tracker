@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>English Speaking Tracker</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#6C63FF">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎙️</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>🎙️ English Speaking Tracker</h1>
+    </header>
+
+    <!-- Tab Navigation -->
+    <nav class="tabs">
+      <button class="tab active" data-tab="record">録音</button>
+      <button class="tab" data-tab="history">履歴</button>
+      <button class="tab" data-tab="stats">統計</button>
+      <button class="tab" data-tab="settings">設定</button>
+    </nav>
+
+    <!-- Record Tab -->
+    <section id="tab-record" class="tab-content active">
+      <div class="record-section">
+        <div class="timer-display">
+          <span id="timer">00:00</span>
+        </div>
+        <div class="word-count-display">
+          <span id="live-word-count">0</span> words
+        </div>
+        <button id="btn-record" class="btn-record">
+          <span class="btn-record-icon">🎤</span>
+          <span class="btn-record-label">タップして開始</span>
+        </button>
+        <div id="transcript-preview" class="transcript-preview"></div>
+      </div>
+
+      <!-- Goal Progress -->
+      <div class="goal-section">
+        <h3>今日の進捗</h3>
+        <div class="progress-bar-container">
+          <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+        </div>
+        <p id="goal-status">目標: 未設定</p>
+      </div>
+    </section>
+
+    <!-- History Tab -->
+    <section id="tab-history" class="tab-content">
+      <h2>履歴</h2>
+      <div class="table-container">
+        <table id="history-table">
+          <thead>
+            <tr>
+              <th>日付</th>
+              <th>単語数</th>
+              <th>時間</th>
+              <th>内容</th>
+            </tr>
+          </thead>
+          <tbody id="history-body"></tbody>
+        </table>
+      </div>
+      <p id="no-history" class="empty-msg">まだ記録がありません</p>
+    </section>
+
+    <!-- Stats Tab -->
+    <section id="tab-stats" class="tab-content">
+      <h2>統計</h2>
+      <div class="stats-cards">
+        <div class="stat-card">
+          <div class="stat-value" id="stat-today-words">0</div>
+          <div class="stat-label">今日の単語数</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-week-words">0</div>
+          <div class="stat-label">今週の単語数</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-total-sessions">0</div>
+          <div class="stat-label">総セッション数</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-total-time">0分</div>
+          <div class="stat-label">総スピーキング時間</div>
+        </div>
+      </div>
+      <div class="chart-container">
+        <h3>日別単語数</h3>
+        <div class="chart-period-selector">
+          <button class="chart-period active" data-period="7">7日</button>
+          <button class="chart-period" data-period="14">14日</button>
+          <button class="chart-period" data-period="30">30日</button>
+        </div>
+        <canvas id="words-chart"></canvas>
+      </div>
+    </section>
+
+    <!-- Settings Tab -->
+    <section id="tab-settings" class="tab-content">
+      <h2>設定</h2>
+      <div class="setting-item">
+        <label for="daily-goal">1日の目標単語数</label>
+        <div class="setting-input-group">
+          <input type="number" id="daily-goal" min="0" step="50" placeholder="例: 500">
+          <button id="btn-save-goal" class="btn-primary">保存</button>
+        </div>
+      </div>
+      <div class="setting-item">
+        <h3>データ管理</h3>
+        <button id="btn-export" class="btn-secondary">データをエクスポート (JSON)</button>
+        <button id="btn-clear" class="btn-danger">全データを削除</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
