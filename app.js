@@ -26,6 +26,16 @@ function saveSettings(settings) {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 }
 
+// ===== Debug =====
+function debugLog(msg) {
+  console.log('[EST]', msg);
+  const el = document.getElementById('debug-log');
+  if (el) {
+    const time = new Date().toLocaleTimeString();
+    el.textContent = `[${time}] ${msg}\n` + el.textContent.slice(0, 2000);
+  }
+}
+
 // ===== State =====
 let isRecording = false;
 let recognition = null;
@@ -75,6 +85,7 @@ function initRecognition() {
         interim += result[0].transcript;
       }
     }
+    debugLog(`onresult: final="${sessionFinal.trim()}" interim="${interim.trim()}" results=${event.results.length}`);
     // 蓄積済み + 今回セッションの確定分を合算
     currentTranscript = (accumulatedTranscript + ' ' + sessionFinal).trim();
     interimTranscript = interim;
@@ -82,10 +93,9 @@ function initRecognition() {
   };
 
   rec.onerror = (event) => {
-    // 'no-speech' is common, just keep going
+    debugLog(`onerror: ${event.error}`);
     if (event.error === 'no-speech') return;
     if (event.error === 'aborted') return;
-    console.error('Speech recognition error:', event.error);
     if (event.error === 'not-allowed') {
       showToast('マイクの許可が必要です');
       stopRecording(false);
@@ -93,6 +103,7 @@ function initRecognition() {
   };
 
   rec.onend = () => {
+    debugLog(`onend: isRecording=${isRecording} current="${currentTranscript}" interim="${interimTranscript}"`);
     // Auto-restart if still recording (recognition can stop unexpectedly on mobile)
     if (isRecording) {
       // interimが確定しないまま切れた場合、interimも蓄積に回す
@@ -106,8 +117,9 @@ function initRecognition() {
       updateLiveDisplay();
       try {
         rec.start();
+        debugLog('restarted recognition');
       } catch (e) {
-        // Ignore if already started
+        debugLog(`restart failed: ${e.message}`);
       }
     }
   };
@@ -174,7 +186,9 @@ function startRecording() {
 
   try {
     recognition.start();
+    debugLog('recognition started');
   } catch (e) {
+    debugLog(`start failed: ${e.message}`);
     showToast('音声認識を開始できませんでした');
     stopRecording(false);
   }
@@ -202,6 +216,8 @@ function stopRecording(shouldSave = true) {
     currentTranscript = (currentTranscript + ' ' + interimTranscript).trim();
     interimTranscript = '';
   }
+
+  debugLog(`stopRecording: save=${shouldSave} transcript="${currentTranscript}"`);
 
   if (shouldSave && currentTranscript.trim()) {
     const elapsed = Math.floor((Date.now() - startTime) / 1000);

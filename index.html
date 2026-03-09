@@ -41,6 +41,15 @@
         <div id="transcript-preview" class="transcript-preview"></div>
       </div>
 
+      <!-- Debug Log -->
+      <div style="margin-top:16px;padding:12px;background:#1a1a2e;border-radius:8px;border:1px solid #333">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-size:0.8rem;color:#999">Debug Log</span>
+          <button onclick="document.getElementById('debug-log').textContent=''" style="font-size:0.7rem;background:#333;color:#999;border:none;padding:4px 8px;border-radius:4px;cursor:pointer">Clear</button>
+        </div>
+        <pre id="debug-log" style="font-size:0.7rem;color:#6f6;max-height:200px;overflow-y:auto;white-space:pre-wrap;margin:0"></pre>
+      </div>
+
       <!-- Goal Progress -->
       <div class="goal-section">
         <h3>今日の進捗</h3>
