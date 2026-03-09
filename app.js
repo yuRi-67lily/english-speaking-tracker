@@ -86,8 +86,10 @@ function initRecognition() {
       }
     }
     debugLog(`onresult: final="${sessionFinal.trim()}" interim="${interim.trim()}" results=${event.results.length}`);
-    // 蓄積済み + 今回セッションの確定分を合算
-    currentTranscript = (accumulatedTranscript + ' ' + sessionFinal).trim();
+    // finalのみ蓄積に加算。interimは表示用のみ（蓄積しない）
+    if (sessionFinal.trim()) {
+      currentTranscript = (accumulatedTranscript + ' ' + sessionFinal).trim();
+    }
     interimTranscript = interim;
     updateLiveDisplay();
   };
@@ -104,15 +106,9 @@ function initRecognition() {
 
   rec.onend = () => {
     debugLog(`onend: isRecording=${isRecording} current="${currentTranscript}" interim="${interimTranscript}"`);
-    // Auto-restart if still recording (recognition can stop unexpectedly on mobile)
     if (isRecording) {
-      // interimが確定しないまま切れた場合、interimも蓄積に回す
-      if (interimTranscript.trim()) {
-        accumulatedTranscript = (currentTranscript + ' ' + interimTranscript).trim();
-      } else {
-        accumulatedTranscript = currentTranscript;
-      }
-      currentTranscript = accumulatedTranscript;
+      // finalだけを蓄積に保存（interimは捨てる＝次の再起動でまた拾われるから）
+      accumulatedTranscript = currentTranscript;
       interimTranscript = '';
       updateLiveDisplay();
       try {
