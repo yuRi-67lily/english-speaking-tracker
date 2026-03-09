@@ -371,15 +371,42 @@ function showEntryModal(entry) {
   overlay.innerHTML = `
     <div class="modal">
       <h3>${dateStr}</h3>
-      <p><strong>${entry.words}</strong> 語 / <strong>${formatDuration(entry.seconds)}</strong></p>
-      <p>${escapeHtml(entry.transcript)}</p>
+      <p id="modal-word-info"><strong>${entry.words}</strong> 語 / <strong>${formatDuration(entry.seconds)}</strong></p>
+      <textarea id="modal-transcript" style="width:100%;min-height:120px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:0.9rem;line-height:1.6;resize:vertical;font-family:inherit">${escapeHtml(entry.transcript)}</textarea>
       <div class="modal-actions">
         <button class="btn-danger" id="modal-delete">削除</button>
+        <button class="btn-primary" id="modal-save">保存</button>
         <button class="btn-secondary" id="modal-close">閉じる</button>
       </div>
     </div>`;
 
   document.body.appendChild(overlay);
+
+  // テキスト編集時に単語数をリアルタイム更新
+  const textarea = overlay.querySelector('#modal-transcript');
+  const wordInfo = overlay.querySelector('#modal-word-info');
+  textarea.addEventListener('input', () => {
+    const newCount = countWords(textarea.value);
+    wordInfo.innerHTML = `<strong>${newCount}</strong> 語 / <strong>${formatDuration(entry.seconds)}</strong>`;
+  });
+
+  overlay.querySelector('#modal-save').addEventListener('click', () => {
+    const newText = textarea.value.trim();
+    if (!newText) {
+      showToast('テキストが空です');
+      return;
+    }
+    const data = loadData();
+    const target = data.find(e => e.id === entry.id);
+    if (target) {
+      target.transcript = newText;
+      target.words = countWords(newText);
+      saveData(data);
+      overlay.remove();
+      renderHistory();
+      showToast('保存しました');
+    }
+  });
 
   overlay.querySelector('#modal-close').addEventListener('click', () => overlay.remove());
   overlay.addEventListener('click', (e) => {
