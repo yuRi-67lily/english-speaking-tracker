@@ -32,6 +32,7 @@ let recognition = null;
 let timerInterval = null;
 let startTime = null;
 let currentTranscript = '';
+let accumulatedTranscript = ''; // 再起動をまたいで蓄積する
 let interimTranscript = '';
 let chart = null;
 let currentChartPeriod = 7;
@@ -64,17 +65,18 @@ function initRecognition() {
   rec.maxAlternatives = 1;
 
   rec.onresult = (event) => {
-    let final = '';
+    let sessionFinal = '';
     let interim = '';
     for (let i = 0; i < event.results.length; i++) {
       const result = event.results[i];
       if (result.isFinal) {
-        final += result[0].transcript + ' ';
+        sessionFinal += result[0].transcript + ' ';
       } else {
         interim += result[0].transcript;
       }
     }
-    currentTranscript = final.trim();
+    // 蓄積済み + 今回セッションの確定分を合算
+    currentTranscript = (accumulatedTranscript + ' ' + sessionFinal).trim();
     interimTranscript = interim;
     updateLiveDisplay();
   };
@@ -91,8 +93,10 @@ function initRecognition() {
   };
 
   rec.onend = () => {
-    // Auto-restart if still recording (recognition can stop unexpectedly)
+    // Auto-restart if still recording (recognition can stop unexpectedly on mobile)
     if (isRecording) {
+      // 再起動前に今のcurrentTranscriptを蓄積に保存
+      accumulatedTranscript = currentTranscript;
       try {
         rec.start();
       } catch (e) {
@@ -146,6 +150,7 @@ function startRecording() {
 
   isRecording = true;
   currentTranscript = '';
+  accumulatedTranscript = '';
   interimTranscript = '';
   startTime = Date.now();
 
