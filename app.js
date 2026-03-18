@@ -383,6 +383,7 @@ function showEntryModal(entry) {
       <textarea id="modal-transcript" style="width:100%;min-height:120px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:0.9rem;line-height:1.6;resize:vertical;font-family:inherit">${escapeHtml(entry.transcript)}</textarea>
       <div class="modal-actions">
         <button class="btn-danger" id="modal-delete">削除</button>
+        <button class="btn-copy" id="modal-copy">📋 コピー</button>
         <button class="btn-primary" id="modal-save">保存</button>
         <button class="btn-secondary" id="modal-close">閉じる</button>
       </div>
@@ -414,6 +415,18 @@ function showEntryModal(entry) {
       renderHistory();
       showToast('保存しました');
     }
+  });
+
+  overlay.querySelector('#modal-copy').addEventListener('click', () => {
+    const text = textarea.value.trim();
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('英文をコピーしました');
+    }).catch(() => {
+      // fallback for older browsers
+      textarea.select();
+      document.execCommand('copy');
+      showToast('英文をコピーしました');
+    });
   });
 
   overlay.querySelector('#modal-close').addEventListener('click', () => overlay.remove());

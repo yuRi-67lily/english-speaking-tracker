@@ -374,13 +374,19 @@ tr:hover td {
   border: 1px solid var(--border);
 }
 
+.btn-copy {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
 .btn-danger {
   background: transparent;
   color: var(--danger);
   border: 1px solid var(--danger);
 }
 
-.btn-primary:hover, .btn-secondary:hover, .btn-danger:hover {
+.btn-primary:hover, .btn-secondary:hover, .btn-danger:hover, .btn-copy:hover {
   opacity: 0.85;
 }
 
