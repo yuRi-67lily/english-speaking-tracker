@@ -106,8 +106,16 @@ function initRecognition() {
   };
 
   rec.onend = () => {
-    debugLog(`onend: isRecording=${isRecording} accumulated="${accumulatedTranscript}"`);
+    debugLog(`onend: isRecording=${isRecording} accumulated="${accumulatedTranscript}" interim="${interimTranscript}"`);
     if (isRecording) {
+      // interimに残っているテキストを蓄積に合流させる（再起動で消失するのを防ぐ）
+      if (interimTranscript.trim()) {
+        accumulatedTranscript = (accumulatedTranscript + ' ' + interimTranscript).trim();
+        currentTranscript = accumulatedTranscript;
+        interimTranscript = '';
+        updateLiveDisplay();
+        debugLog(`merged interim on restart: "${accumulatedTranscript}"`);
+      }
       // 少し待ってから再起動（音声バッファが残って重複するのを防ぐ）
       setTimeout(() => {
         if (!isRecording) return;
